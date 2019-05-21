@@ -441,8 +441,8 @@
       }
     },
     productAdd: function (el, data) {
-      const $this = $(el);
-      const dataObject = {};
+      var $this = $(el);
+      var dataObject = {};
       let newItem;
 
       for (let i = 0; i < data.length; i++) {
@@ -451,80 +451,77 @@
       console.log(dataObject);
 
       if (dataObject.category === 'arrangement') {
-        newItem = {
-          type: 'floral',
-          storage: 'cool',
-          name: dataObject.itemname,
-          vase: dataObject.vasetype,
-          quantity: dataObject.qty,
-          logItem: () => {
-            console.log(`%c${this.name}`, 'font-weight: bold');
-            for (let prop in this) {
-              if (this.hasOwnProperty(prop)) {
-                console.log(' ', prop, ': ', this[prop]);
-              }
-            }
-          }
-        };
+        // newItem = {
+        //   type: 'floral',
+        //   storage: 'cool',
+        //   name: dataObject.itemname,
+        //   vase: dataObject.vasetype,
+        //   quantity: dataObject.qty,
+        //   logItem: function() {
+        //     console.log('%c' + this.name,'font-weight: bold');
+        //     for (let prop in this) {
+        //       console.log(' ', prop, ': ', this[prop])
+        //     }
+        //   }
+        // }
+        newItem = new Arrangement(dataObject.itemname, dataObject.vasetype, dataObject.qty);
       } else if (dataObject.category === 'live') {
-        newItem = {
-          type: 'floral',
-          storage: 'warm',
-          name: dataObject.itemname,
-          pot: dataObject.pottype,
-          quantity: dataObject.qty,
-          logItem: () => {
-            console.log(`%c${this.name}`, 'font-weight: bold');
-            for (let prop in this) {
-              if (this.hasOwnProperty(prop)) {
-                console.log(' ', prop, ': ', this[prop]);
-              }
-            }
-          }
-        };
+        // newItem = {
+        //   type: 'floral',
+        //   storage: 'warm',
+        //   name: dataObject.itemname,
+        //   pot: dataObject.pottype,
+        //   quantity: dataObject.qty,
+        //   logItem: function() {
+        //     console.log('%c' + this.name,'font-weight: bold');
+        //     for (let prop in this) {
+        //       console.log(' ', prop, ': ', this[prop])
+        //     }
+        //   }
+        // }
+        newItem = new Live(dataObject.itemname, dataObject.pottype, dataObject.qty);
       } else if (dataObject.category === 'bouquet') {
         if ($.cookie('bouquetCount')) {
           $.cookie('bouquetCount', parseInt($.cookie('bouquetCount')) + 1);
         } else {
           $.cookie('bouquetCount', 1);
         }
-        newItem = {
-          type: 'floral',
-          storage: 'cool',
-          name: dataObject.category,
-          vase: dataObject.vasetype,
-          flowers: {},
-          logItem: () => {
-            console.log(`%c${this.name}`, 'font-weight: bold');
-            for (let prop in this) {
-              if (this.hasOwnProperty(prop)) {
-                console.log(' ', prop, ': ', this[prop]);
-              }
-            }
-          }
-        };
-        for (let item in dataObject) {
-          if (dataObject.hasOwnProperty(item)) {
-            // if item starts with 'qty' and has a value greater than 0
-            if (RegExp('qty.+').test(item) && dataObject[item] > 0) {
-              const stemType = item.substr(3);
-              const legend = $('#' + item).parent().parent().data('legend');
-              const key = legend.replace(/\s/g, '');
-              // if item requires a color selection and one has been specified
-              if (['CL', 'GD', 'R', 'L', 'T'].includes(stemType) &&
-                dataObject['color' + stemType] !== '---') {
-                // add new item, specifying name, quantity, and color
-                let stemName = dataObject['color' + stemType];
-                newItem.flowers[key] = {};
-                newItem.flowers[key][stemName] = dataObject[item];
-                newItem.flowers[key].type = 'floral';
-              } else {
-                // add new item specifying only name and quantity
-                newItem.flowers[key] = {
-                  Default: dataObject[item],
-                  type: 'floral',
-                }
-              }
+        // newItem = {
+        //   type: 'floral',
+        //   storage: 'cool',
+        //   name: dataObject.category,
+        //   vase: dataObject.vasetype,
+        //   flowers: {},
+        //   logItem: function() {
+        //     console.log('%c' + this.name,'font-weight: bold');
+        //     for (let prop in this) {
+        //       console.log(' ', prop, ': ', this[prop])
+        //     }
+        //   }
+        // }
+        newItem = new Bouquet(dataObject.itemname, dataObject.vasetype);
+        for (item in dataObject) {
+          // if item starts with 'qty' and has a value greater than 0
+          if (RegExp('qty.+').test(item) && dataObject[item] > 0) {
+            const stemType = item.substr(3);
+            const legend = $('#' + item).parent().parent().data('legend');
+            const key = legend.replace(/\s/g, '');
+            // if item requires a color selection and one has been specified
+            if (['CL', 'GD', 'R', 'L', 'T'].includes(stemType) &&
+              dataObject['color' + stemType] !== '---') {
+              // add new item, specifying name, quantity, and color
+              let stemName = dataObject['color' + stemType];
+              // newItem.flowers[key] = {};
+              // newItem.flowers[key][stemName] = dataObject[item];
+              // newItem.flowers[key].type = 'floral';
+              newItem.flowers.addStem(key, dataObject[item], dataObject['color' + stemType]);
+            } else {
+              // add new item specifying only name and quantity
+              // newItem.flowers[key] = {
+              //   Default: dataObject[item],
+              //   type: 'floral'
+              // };
+              newItem.flowers.addStem(key, dataObject[item]);
             }
           }
         }
@@ -637,6 +634,72 @@
       $('.question').on('click', function (e) {
         e.preventDefault();
       });
+    }
+  };
+
+  function Arrangement(name, vase, quantity = 1) {
+    this.name = name;
+    this.vase = vase;
+    this.quantity = quantity;
+  }
+
+  Arrangement.prototype.type = 'floral';
+  Arrangement.prototype.storage = 'cool';
+  Arrangement.prototype.logItem = function () {
+    console.log(`%c${this.name}`, 'font-weight: bold');
+    for (let prop in this) {
+      console.log(' ', prop, ': ', this[prop]);
+    }
+  };
+
+  function Live(name, pot, quantity = 1) {
+    this.name = name;
+    this.pot = pot;
+    this.quantity = quantity;
+  }
+
+  Live.prototype.type = 'floral';
+  Live.prototype.storage = 'warm';
+  Live.prototype.logItem = function () {
+    console.log(`%c${this.name}`, 'font-weight: bold');
+    for (let prop in this) {
+      if (this.hasOwnProperty(prop)) {
+        console.log(' ', prop, ': ', this[prop]);
+      }
+    }
+  };
+
+  function Bouquet(name, vase) {
+    this.name = name;
+    this.vase = vase;
+  }
+
+  Bouquet.prototype.type = 'floral';
+  Bouquet.prototype.storage = 'cool';
+  Bouquet.prototype.logItem = function () {
+    console.log(`%c${this.name}`, 'font-weight: bold');
+    for (let prop in this) {
+      if (this.hasOwnProperty(prop)) {
+        console.log(' ', prop, ': ', this[prop]);
+      }
+    }
+  };
+  Bouquet.prototype.flowers = {
+    addStem: function (name, quantity = 1, color = 'Default') {
+      this[name] = new Flower(quantity, color);
+    }
+  };
+
+  function Flower(quantity, color) {
+    this[color] = quantity;
+  }
+
+  Flower.prototype.logItem = function () {
+    console.log(`%c${this.name}`, 'font-weight: bold');
+    for (let prop in this) {
+      if (this.hasOwnProperty(prop)) {
+        console.log(' ', prop, ': ', this[prop]);
+      }
     }
   };
 })();
