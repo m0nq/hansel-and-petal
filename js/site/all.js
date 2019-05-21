@@ -441,8 +441,8 @@
       }
     },
     productAdd: function (el, data) {
-      var $this = $(el);
-      var dataObject = {};
+      const $this = $(el);
+      const dataObject = {};
       let newItem;
 
       for (let i = 0; i < data.length; i++) {
@@ -451,35 +451,85 @@
       console.log(dataObject);
 
       if (dataObject.category === 'arrangement') {
-
+        newItem = {
+          type: 'floral',
+          storage: 'cool',
+          name: dataObject.itemname,
+          vase: dataObject.vasetype,
+          quantity: dataObject.qty,
+          logItem: () => {
+            console.log(`%c${this.name}`, 'font-weight: bold');
+            for (let prop in this) {
+              if (this.hasOwnProperty(prop)) {
+                console.log(' ', prop, ': ', this[prop]);
+              }
+            }
+          }
+        };
       } else if (dataObject.category === 'live') {
-
+        newItem = {
+          type: 'floral',
+          storage: 'warm',
+          name: dataObject.itemname,
+          pot: dataObject.pottype,
+          quantity: dataObject.qty,
+          logItem: () => {
+            console.log(`%c${this.name}`, 'font-weight: bold');
+            for (let prop in this) {
+              if (this.hasOwnProperty(prop)) {
+                console.log(' ', prop, ': ', this[prop]);
+              }
+            }
+          }
+        };
       } else if (dataObject.category === 'bouquet') {
         if ($.cookie('bouquetCount')) {
           $.cookie('bouquetCount', parseInt($.cookie('bouquetCount')) + 1);
         } else {
           $.cookie('bouquetCount', 1);
         }
-
-        for (item in dataObject) {
-          // if item starts with 'qty' and has a value greater than 0
-          if (RegExp('qty.+').test(item) && dataObject[item] > 0) {
-            const stemType = item.substr(3);
-            const legend = $('#' + item).parent().parent().data('legend');
-            const key = legend.replace(/\s/g, '');
-            // if item requires a color selection and one has been specified
-            if (['CL', 'GD', 'R', 'L', 'T'].includes(stemType) &&
-              dataObject['color' + stemType] !== '---') {
-              // add new item, specifying name, quantity, and color
-              let stemName = dataObject['color' + stemType];
-
-            } else {
-              // add new item specifying only name and quantity
-
+        newItem = {
+          type: 'floral',
+          storage: 'cool',
+          name: dataObject.category,
+          vase: dataObject.vasetype,
+          flowers: {},
+          logItem: () => {
+            console.log(`%c${this.name}`, 'font-weight: bold');
+            for (let prop in this) {
+              if (this.hasOwnProperty(prop)) {
+                console.log(' ', prop, ': ', this[prop]);
+              }
+            }
+          }
+        };
+        for (let item in dataObject) {
+          if (dataObject.hasOwnProperty(item)) {
+            // if item starts with 'qty' and has a value greater than 0
+            if (RegExp('qty.+').test(item) && dataObject[item] > 0) {
+              const stemType = item.substr(3);
+              const legend = $('#' + item).parent().parent().data('legend');
+              const key = legend.replace(/\s/g, '');
+              // if item requires a color selection and one has been specified
+              if (['CL', 'GD', 'R', 'L', 'T'].includes(stemType) &&
+                dataObject['color' + stemType] !== '---') {
+                // add new item, specifying name, quantity, and color
+                let stemName = dataObject['color' + stemType];
+                newItem.flowers[key] = {};
+                newItem.flowers[key][stemName] = dataObject[item];
+                newItem.flowers[key].type = 'floral';
+              } else {
+                // add new item specifying only name and quantity
+                newItem.flowers[key] = {
+                  Default: dataObject[item],
+                  type: 'floral',
+                }
+              }
             }
           }
         }
       }
+      newItem.logItem();
 
       if ($.cookie('basket-data')) {
         let cookieData = $.cookie('basket-data');
